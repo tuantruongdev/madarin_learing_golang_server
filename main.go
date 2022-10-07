@@ -13,6 +13,10 @@ const (
 )
 
 func main() {
+	//fmt.Println(gin.H{"time": time.Now().Format("2022-10-07 14:53:02 +0700 +07")})
+	//
+	//return
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln("Cannot connect to MySQL:", err)

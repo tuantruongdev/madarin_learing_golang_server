@@ -7,5 +7,5 @@ import (
 
 func Register(router *gin.Engine, db *gorm.DB) {
 	RegisterWord(router, db)
-	RegisterAuth(router)
+	RegisterAuth(router, db)
 }

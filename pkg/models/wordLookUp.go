@@ -30,8 +30,8 @@ type Entry struct {
 func (Entry) TableName() string { return "entry" }
 
 /*db*/
-func InsertCharacter(db *gorm.DB, character CharacterLookup) bool {
-	if err := db.Create(&character).Error; err != nil {
+func InsertCharacter(db *gorm.DB, char CharacterLookup) bool {
+	if err := db.Create(&char).Error; err != nil {
 		return false
 	}
 	return true
@@ -47,6 +47,13 @@ func QueryCharacter(db *gorm.DB, character string) (CharacterLookup, error) {
 
 func InsertEntries(db *gorm.DB, entries []Entry) bool {
 	if err := db.Create(&entries).Error; err != nil {
+		return false
+	}
+	return true
+}
+
+func InsertEntry(db *gorm.DB, entry Entry) bool {
+	if err := db.Create(&entry).Error; err != nil {
 		return false
 	}
 	return true

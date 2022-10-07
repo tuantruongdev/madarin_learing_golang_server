@@ -5,6 +5,7 @@ import (
 )
 
 type Example struct {
+	Id          int    `json:"id" gorm:"id"`
 	Simplified  string `json:"simplified" gorm:"simplified""`
 	Hanzi       string `json:"hanzi" gorm:"hanzi"`
 	Pinyin      string `json:"pinyin" gorm:"pinyin"`
@@ -15,6 +16,12 @@ type Example struct {
 
 func (Example) TableName() string { return "character_example" }
 
+func InsertExample(db *gorm.DB, example Example) bool {
+	if err := db.Create(&example).Error; err != nil {
+		return false
+	}
+	return true
+}
 func InsertExamples(db *gorm.DB, examples []Example) bool {
 	if err := db.Create(&examples).Error; err != nil {
 		return false

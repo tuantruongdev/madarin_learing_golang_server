@@ -90,6 +90,7 @@ func LookupExample(db *gorm.DB) gin.HandlerFunc {
 		collector.OnRequest(func(request *colly.Request) {
 			//fmt.Println("Visiting", request.URL.String())
 		})
+
 		examplesArr, err := models.QueryExample(db, character, isQueryAudio)
 		if err != nil || len(examplesArr) < 1 {
 			collector.Visit("https://www.chinesepod.com/dictionary/" + character)
@@ -101,7 +102,6 @@ func LookupExample(db *gorm.DB) gin.HandlerFunc {
 			}
 			models.InsertExamples(db, examplesArr)
 		}
-
 		context.JSON(http.StatusOK, examplesArr)
 	}
 }
