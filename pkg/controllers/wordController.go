@@ -38,14 +38,31 @@ func LookupCharacter(db *gorm.DB) gin.HandlerFunc {
 				context.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Not found"})
 				return
 			}
-			models.InsertCharacter(db, dbCharacterLookup)
-			models.InsertEntries(db, dbCharacterLookup.Entries)
+			checkHsk(db, dbCharacterLookup)
 		} else {
 			//get entry in case have result
 			dbCharacterLookup.Entries, _ = models.QueryEntry(db, character)
 		}
+		//	time.Sleep(5000)
 		context.JSON(http.StatusOK, gin.H{"simplified": dbCharacterLookup.Simplified, "rank": dbCharacterLookup.Rank, "hsk": dbCharacterLookup.Hsk, "entries": dbCharacterLookup.Entries})
 	}
+}
+
+func checkHsk(db *gorm.DB, dbCharacterlookup models.CharacterLookup) {
+	hskLevel := 1
+	for i := 0; i < 6; i++ {
+		if strings.Contains(utils.Hsk[i], dbCharacterlookup.Simplified) {
+			hskLevel = i + 1
+			break
+		}
+	}
+	dbCharacterlookup.Hsk = hskLevel
+	saveCharacterData(db, dbCharacterlookup)
+}
+
+func saveCharacterData(db *gorm.DB, dbCharacterLookup models.CharacterLookup) {
+	models.InsertCharacter(db, dbCharacterLookup)
+	models.InsertEntries(db, dbCharacterLookup.Entries)
 }
 
 func LookupExample(db *gorm.DB) gin.HandlerFunc {
@@ -103,5 +120,12 @@ func LookupExample(db *gorm.DB) gin.HandlerFunc {
 			models.InsertExamples(db, examplesArr)
 		}
 		context.JSON(http.StatusOK, examplesArr)
+	}
+
+}
+func AudioExample(db *gorm.DB) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		//TODO update this shit
+		context.JSON(http.StatusOK, gin.H{})
 	}
 }

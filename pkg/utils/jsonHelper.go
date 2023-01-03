@@ -9,7 +9,7 @@ import (
 )
 
 func JsonReader() map[string]models.CharacterJson {
-	jsonFile, err := os.Open("./data/cedict_1_0_ts_utf-8_mdbg.json")
+	jsonFile, err := os.Open("./dict.json")
 	if err != nil {
 		fmt.Println(err)
 	}

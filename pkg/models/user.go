@@ -12,6 +12,8 @@ import (
 
 type User struct {
 	Id                int        `json:"id" gorm:"id"`
+	Name              string     `json:"name" gorm:"name"`
+	ImageUrl          string     `json:"imageUrl" gorm:"image_url""`
 	Email             string     `json:"email" gorm:"email"`
 	Password          string     `json:"password" gorm:"password"`
 	NewPassword       string     `json:"newPassword" gorm:"-"`

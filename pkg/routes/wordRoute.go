@@ -9,7 +9,8 @@ import (
 func RegisterWord(router *gin.Engine, db *gorm.DB) {
 	word := router.Group("/api/v1/word")
 	{
-		word.GET("/audio/:character").
+		//not complete
+		word.GET("/audio/:character", controllers.AudioExample(db)).
 			GET("/lookup/:character", controllers.LookupCharacter(db)).
 			GET("/sentences/:character", controllers.LookupExample(db))
 	}

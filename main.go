@@ -13,10 +13,10 @@ const (
 )
 
 func main() {
-	//fmt.Println(gin.H{"time": time.Now().Format("2022-10-07 14:53:02 +0700 +07")})
-	//
-	//return
-
+	//res := models.NetResponse{}.Build()
+	//res.SetStatus(200, "ok", "mess")
+	//res.H["data"] = []int{10, 5, 1, 1, 4}
+	//fmt.Println(res)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln("Cannot connect to MySQL:", err)

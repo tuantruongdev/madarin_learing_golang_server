@@ -8,4 +8,6 @@ import (
 func Register(router *gin.Engine, db *gorm.DB) {
 	RegisterWord(router, db)
 	RegisterAuth(router, db)
+	RegisterTranslate(router, db)
+	RegisterSyncWord(router, db)
 }

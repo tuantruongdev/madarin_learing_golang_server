@@ -11,21 +11,26 @@ import (
 )
 
 func validateEmailAndPassword(context gin.Context) (models.User, bool) {
+	res := models.NetResponse{}.Build()
 	var user models.User
 	context.BindJSON(&user)
+	fmt.Println(user)
 	user.JwtToken = ""
 	if len(user.Email) == 0 || len(user.Password) < 0 {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "failed", "message": "you must include email or password"})
+		res.SetStatus(http.StatusBadRequest, models.StatusError, "You must include email or password")
+		context.JSON(res.Generate())
 		context.Abort()
 		return user, false
 	}
 	if !models.ValidEmail(user.Email) {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "failed", "message": "your email is not valid"})
+		res.SetStatus(http.StatusBadRequest, models.StatusError, "Your email is not valid")
+		context.JSON(res.Generate())
 		context.Abort()
 		return user, false
 	}
 	if len(user.Password) < 6 {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "failed", "message": "your password must be at least 6 characters"})
+		res.SetStatus(http.StatusBadRequest, models.StatusError, "Your password must be at least 6 characters")
+		context.JSON(res.Generate())
 		context.Abort()
 		return user, false
 	}
@@ -34,7 +39,7 @@ func validateEmailAndPassword(context gin.Context) (models.User, bool) {
 
 func SignUp(db *gorm.DB) gin.HandlerFunc {
 	return func(context *gin.Context) {
-
+		res := models.NetResponse{}.Build()
 		user, ok := validateEmailAndPassword(*context)
 		if !ok {
 			return
@@ -43,39 +48,51 @@ func SignUp(db *gorm.DB) gin.HandlerFunc {
 			models.HashPassword(&user)
 			models.InsertUser(db, &user)
 			user, _ = models.GetUserInfo(db, user.Email)
+			fmt.Println(user)
 			//us
 			_ = models.SignJwt(&user)
-			context.JSON(http.StatusOK, gin.H{"status": "ok", "message": "account created successfully", "token": user.JwtToken})
+			res.SetStatus(http.StatusOK, models.StatusOk, "account created successfully")
+			res.Set("token", user.JwtToken)
+			context.JSON(res.Generate())
 			return
 		}
-		context.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Your email has been linked with another account"})
+		res.SetStatus(http.StatusBadRequest, models.StatusError, "Your email has been linked with another account")
+		context.JSON(res.Generate())
 	}
 }
 
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(context *gin.Context) {
+
+		res := models.NetResponse{}.Build()
 		user, ok := validateEmailAndPassword(*context)
 		if !ok {
 			return
 		}
 		dbUser, err := models.GetUserInfo(db, user.Email)
 		if err != nil {
-			context.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "account or password are in correct"})
+			res.SetStatus(http.StatusNotFound, models.StatusError, "Account or password are incorrect")
+			context.JSON(res.Generate())
 			return
 		}
 		models.HashPassword(&user)
 		if dbUser.Password != user.Password {
-			//	fmt.Println(dbUser.Password, user.Password)
-			context.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "account or password are in correct 2"})
+			res.SetStatus(http.StatusNotFound, models.StatusError, "Account or password are incorrect 2")
+			context.JSON(res.Generate())
 			return
 		}
 		//fmt.Println(user)
 		err = models.SignJwt(&dbUser)
 
 		if err != nil {
-			context.JSON(http.StatusNotFound, gin.H{"status": "error", "message": err.Error()})
+			res.SetStatus(http.StatusNotFound, models.StatusError, err.Error())
+			context.JSON(res.Generate())
+			return
 		}
-		context.JSON(http.StatusNotFound, gin.H{"status": "ok", "message": "login successfully", "token": dbUser.JwtToken})
+
+		res.SetStatus(http.StatusOK, models.StatusOk, "Login successfully")
+		res.Set("token", dbUser.JwtToken)
+		context.JSON(res.Generate())
 	}
 }
 
@@ -83,18 +100,25 @@ func Authorize(db *gorm.DB) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var user models.User
 
-		err := context.ShouldBindBodyWith(&user, binding.JSON)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+		//err := context.ShouldBindBodyWith(&user, binding.JSON)
+		//if err != nil {
+		//	fmt.Println(err.Error())
+		//}
 
 		jwtToken := context.GetHeader("Authorization")
 		if len(jwtToken) < 1 {
+
 			context.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "you're not logged in1"})
 			context.Abort()
 			return
 		}
-		jwtToken = strings.Split(jwtToken, " ")[1]
+		jwtArr := strings.Split(jwtToken, " ")
+		if len(jwtToken) < 2 {
+			context.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "you're not logged in4"})
+			context.Abort()
+			return
+		}
+		jwtToken = jwtArr[1]
 		if len(jwtToken) < 1 {
 			context.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "you're not logged in32"})
 			context.Abort()
