@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gocolly/colly"
 	"gorm.io/gorm"
@@ -26,14 +27,6 @@ func LookupCharacter(db *gorm.DB) gin.HandlerFunc {
 		//check if no result
 		if dbCharacterLookup.Simplified == "" || err != nil {
 			dbCharacterLookup = models.ConvertJsonToCharacter(jsonDb, character)
-			////fake
-			//entryLookup := Entry{Simplified: character, Traditional: character, Pinyin: "dǎ", Definitions: []string{"to beat", "to strike", "to hit", "to break", "to type", "to mix up", "to build", "to fight", "to fetch", "to make", "to tie up", "to issue"}}
-			//dbCharacterLookup = CharacterLookup{
-			//	Simplified: character,
-			//	Rank:       43,
-			//	Hsk:        1,
-			//	Entries:    []Entry{entryLookup, entryLookup},
-			//}
 			if len(dbCharacterLookup.Entries) < 1 {
 				context.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Not found"})
 				return
@@ -61,6 +54,7 @@ func checkHsk(db *gorm.DB, dbCharacterlookup models.CharacterLookup) {
 }
 
 func saveCharacterData(db *gorm.DB, dbCharacterLookup models.CharacterLookup) {
+	fmt.Println(dbCharacterLookup)
 	models.InsertCharacter(db, dbCharacterLookup)
 	models.InsertEntries(db, dbCharacterLookup.Entries)
 }
@@ -123,6 +117,57 @@ func LookupExample(db *gorm.DB) gin.HandlerFunc {
 	}
 
 }
+
+func QuizLinkLookUp(db *gorm.DB) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		type quiz struct {
+			Character string `json:"character"`
+			Mean      string `json:"mean"`
+		}
+		res := models.NetResponse{}.Build()
+		queryString := context.Query("words")
+		if len(queryString) < 1 {
+			res.SetStatus(http.StatusBadRequest, models.StatusError, "you need provide at least one word")
+			context.JSON(res.Generate())
+			return
+		}
+		query := strings.Split(queryString, ",")
+
+		quizSet := make([]quiz, 0)
+		for i := 0; i < len(query); i++ {
+			entries, err := models.QueryEntry(db, query[i])
+			if err != nil || entries == nil || len(entries) < 1 {
+				fmt.Println("not in db")
+				jsonDb := utils.JsonReader()
+				dbCharacterLookup := models.ConvertJsonToCharacter(jsonDb, query[i])
+				if len(dbCharacterLookup.Entries) < 1 {
+					continue
+				}
+				entries = dbCharacterLookup.Entries
+				saveCharacterData(db, dbCharacterLookup)
+			} else {
+				fmt.Println("in db"+query[i], entries)
+			}
+
+			fmt.Println(query)
+			quizSet = append(quizSet, quiz{
+				Character: query[i],
+				Mean:      entries[0].Definitions[0],
+			})
+		}
+		if len(quizSet) < 1 {
+			res.SetStatus(http.StatusBadRequest, models.StatusError, "you need provide at least one word")
+			context.JSON(res.Generate())
+			return
+		}
+
+		//TODO update this shit
+		res.SetStatus(http.StatusOK, models.StatusOk, "get quiz successful")
+		res.Set("data", quizSet)
+		context.JSON(res.Generate())
+	}
+}
+
 func AudioExample(db *gorm.DB) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		//TODO update this shit

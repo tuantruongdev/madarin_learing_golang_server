@@ -129,6 +129,13 @@ func GetUserInfo(db *gorm.DB, email string) (User, error) {
 	return user, nil
 }
 
+func UpdateName(db *gorm.DB, user User) error {
+	if err := db.Model(&user).Where("email = ? ", user.Email).Update("name", user.Name).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func UpdatePasswordChangeTime(db *gorm.DB, user *User) error {
 	*user.PasswordUpdatedAt = time.Now()
 	if err := db.Model(&user).Where("email =?", user.Email).Update("password_updated_at", user.PasswordUpdatedAt.String()).Error; err != nil {

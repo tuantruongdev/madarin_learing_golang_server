@@ -8,6 +8,7 @@ import (
 	"mandarinLearningBE/pkg/models"
 	"net/http"
 	"strings"
+	"unicode"
 )
 
 func validateEmailAndPassword(context gin.Context) (models.User, bool) {
@@ -92,6 +93,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 
 		res.SetStatus(http.StatusOK, models.StatusOk, "Login successfully")
 		res.Set("token", dbUser.JwtToken)
+		res.Set("name", dbUser.Name)
 		context.JSON(res.Generate())
 	}
 }
@@ -202,6 +204,50 @@ func ChangePass(db *gorm.DB) gin.HandlerFunc {
 		models.UpdatePasswordChangeTime(db, &dbUser)
 		models.SignJwt(&dbUser)
 		context.JSON(http.StatusCreated, gin.H{"status": "ok", "message": "password changed successfully", "token": dbUser.JwtToken})
-
 	}
+}
+func ChangeName(db *gorm.DB) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		type name struct {
+			NewName string `json:"newName"`
+		}
+		res := models.NetResponse{}.Build()
+		var userNewName name
+		err := context.ShouldBindBodyWith(&userNewName, binding.JSON)
+		user, ok := context.Keys["user"].(models.User)
+		_ = user
+		if !ok {
+			res.SetStatus(http.StatusUnauthorized, models.StatusError, "you're not logged in")
+			context.JSON(res.Generate())
+			return
+		}
+		if err != nil {
+			res.SetStatus(http.StatusBadRequest, models.StatusError, "you should providing new name")
+			context.JSON(res.Generate())
+			return
+		}
+		if !isAlphaNumeric(userNewName.NewName) || len(userNewName.NewName) < 3 || len(userNewName.NewName) > 25 {
+			res.SetStatus(http.StatusBadRequest, models.StatusError, "please provide valid name")
+			context.JSON(res.Generate())
+			return
+		}
+		user.Name = userNewName.NewName
+		err = models.UpdateName(db, user)
+		if err != nil {
+			res.SetStatus(http.StatusBadRequest, models.StatusError, "save name failed")
+			context.JSON(res.Generate())
+			return
+		}
+		res.SetStatus(http.StatusOK, models.StatusOk, "save name successfully")
+		//fmt.Println(user)
+		context.JSON(res.Generate())
+	}
+}
+func isAlphaNumeric(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if !(unicode.IsLetter(rune(s[i])) || unicode.IsDigit(rune(s[i])) || s[i] == ' ') {
+			return false
+		}
+	}
+	return true
 }

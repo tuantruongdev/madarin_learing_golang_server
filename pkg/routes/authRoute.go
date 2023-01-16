@@ -14,7 +14,8 @@ func RegisterAuth(router *gin.Engine, db *gorm.DB) {
 			GET("/auth", controllers.Authorize(db)).
 			POST("/signup", controllers.SignUp(db)).
 			POST("/logout", controllers.Authorize(db), controllers.Logout(db)).
-			PATCH("/changePass", controllers.Authorize(db), controllers.ChangePass(db)).
-			POST("/forgot")
+			PATCH("/pass", controllers.Authorize(db), controllers.ChangePass(db)).
+			POST("/forgot").
+			PATCH("/name", controllers.Authorize(db), controllers.ChangeName(db))
 	}
 }

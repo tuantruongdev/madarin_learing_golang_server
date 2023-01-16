@@ -12,6 +12,7 @@ func RegisterWord(router *gin.Engine, db *gorm.DB) {
 		//not complete
 		word.GET("/audio/:character", controllers.AudioExample(db)).
 			GET("/lookup/:character", controllers.LookupCharacter(db)).
-			GET("/sentences/:character", controllers.LookupExample(db))
+			GET("/sentences/:character", controllers.LookupExample(db)).
+			GET("/quiz", controllers.QuizLinkLookUp(db))
 	}
 }

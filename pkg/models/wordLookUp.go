@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -32,8 +33,10 @@ func (Entry) TableName() string { return "entry" }
 /*db*/
 func InsertCharacter(db *gorm.DB, char CharacterLookup) bool {
 	if err := db.Create(&char).Error; err != nil {
+		fmt.Println("insert failed")
 		return false
 	}
+	fmt.Println("insert ok")
 	return true
 }
 
