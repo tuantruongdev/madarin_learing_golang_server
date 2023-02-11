@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	dsn = "root:@tcp(127.0.0.1:3306)/developer?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn = "root:123@tcp(127.0.0.1:3306)/developer?charset=utf8mb4&parseTime=True&loc=Local"
 )
 
 func main() {

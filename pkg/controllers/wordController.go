@@ -120,6 +120,7 @@ func LookupExample(db *gorm.DB) gin.HandlerFunc {
 
 func QuizLinkLookUp(db *gorm.DB) gin.HandlerFunc {
 	return func(context *gin.Context) {
+		jsonDb := utils.JsonReader()
 		type quiz struct {
 			Character string `json:"character"`
 			Mean      string `json:"mean"`
@@ -138,7 +139,6 @@ func QuizLinkLookUp(db *gorm.DB) gin.HandlerFunc {
 			entries, err := models.QueryEntry(db, query[i])
 			if err != nil || entries == nil || len(entries) < 1 {
 				fmt.Println("not in db")
-				jsonDb := utils.JsonReader()
 				dbCharacterLookup := models.ConvertJsonToCharacter(jsonDb, query[i])
 				if len(dbCharacterLookup.Entries) < 1 {
 					continue
